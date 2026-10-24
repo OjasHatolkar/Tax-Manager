@@ -46,3 +46,16 @@ desktop.ini
 .env
 application-local.properties
 application-local.yml
+
+### Frontend ###
+node_modules/
+.next/
+*.tsbuildinfo
+next-env.d.ts
+.env*.local
+### Frontend ###
+node_modules/
+.next/
+*.tsbuildinfo
+next-env.d.ts
+.env*.local
