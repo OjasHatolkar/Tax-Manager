@@ -1,0 +1,14 @@
+{
+  "name": "tax-help-rules-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Deterministic, versioned tax-rules engine for Tax Help (federal + Pennsylvania, tax year 2025). No UI, no AI calls — plain TypeScript logic, unit-tested against hackathon scenarios.",
+  "scripts": {
+    "test": "ts-node rules/__tests__/scenarios.test.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "ts-node": "^10.9.2",
+    "@types/node": "^20.11.0"
+  }
+}
