@@ -1,19 +1,25 @@
-# `lib/` — future application logic
+# `lib/` — application logic
 
-This directory is intentionally empty of business logic in this first
-milestone (landing page only). It is reserved so later phases can keep
-concerns separated without restructuring the app:
-
-- `lib/gemini/` — Gemini API client, prompt templates, and response
-  validation/parsing for adaptive follow-up questions and plain-English
-  explanations. Server-only; API keys must never be exposed to the client.
-- `lib/auth/` — Auth0 session helpers and route protection utilities.
-- `lib/rules/` — versioned, deterministic tax-topic and document rules
-  (not AI-generated) that Gemini output is checked against, plus citations
-  to official sources (IRS, PA Department of Revenue).
+- `lib/rules/` — **implemented.** A deterministic, versioned tax-rules
+  engine. See `lib/rules/README.md` for the full design write-up. Nothing
+  in here is AI-generated or AI-evaluated; it is plain TypeScript data and
+  three-valued (true/false/unknown) logic, unit-tested against three
+  hackathon scenarios (college student, student with a side hustle, recent
+  graduate). Not yet wired into any UI — the questionnaire that produces
+  `TaxFacts` objects is the next build step.
+- `lib/gemini/` — **not yet built.** Will hold the Gemini API client,
+  prompt templates, and response validation for adaptive follow-up
+  questions and plain-English explanations. Server-only; API keys must
+  never be exposed to the client. Per product requirement, Gemini output
+  will always be checked against `lib/rules/` and never asserts eligibility
+  on its own.
+- `lib/auth/` — **not yet built.** Will hold Auth0 session helpers and
+  route protection utilities.
 - `lib/types.ts` — shared TypeScript types for assessment answers, tax
-  topics, and document checklist items, used by both the UI and the future
+  topics, and document checklist items, used by both the UI and the
   rules/Gemini layers.
 
-Nothing in this app currently calls an external AI service or performs
-tax calculations.
+Nothing in this app currently calls an external AI service. The rules
+engine performs supported deterministic calculations and eligibility
+screening only — it is not a full tax-return engine and never outputs a
+refund estimate.
