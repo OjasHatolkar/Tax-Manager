@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { Type } from "@google/genai";
 import { getAuthoritativeEvaluations, getGemini, getModel } from "@/lib/gemini/server";
 import { cleanFacts } from "@/lib/gemini/sanitize";
+import { isRecord, readJsonRequest, RequestBodyError } from "@/lib/api/request";
+import { checkGeminiRateLimit, trackGeminiCall } from "@/lib/health/telemetry";
 
 const SYSTEM = `You help college students and recent grads understand their own tax situation.
 You receive QUESTIONNAIRE ANSWERS (user-provided) and RULES ENGINE RESULTS (authoritative).
@@ -54,15 +56,18 @@ function parseAdvice(text: string | undefined): Advice | null {
 }
 
 export async function POST(req: Request) {
+    const rateLimitResponse = checkGeminiRateLimit(req);
+    if (rateLimitResponse) return rateLimitResponse;
     let body: unknown;
     try {
-        body = await req.json();
-    } catch {
-        return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+        body = await readJsonRequest(req);
+    } catch (error) {
+        const status = error instanceof RequestBodyError ? error.status : 400;
+        return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid JSON" }, { status });
     }
 
-    const { answers } = (body ?? {}) as Record<string, unknown>;
-    const facts = cleanFacts(answers);
+    if (!isRecord(body)) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    const facts = cleanFacts(body.answers);
     if (!facts) {
         return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
@@ -70,18 +75,19 @@ export async function POST(req: Request) {
     const evaluations = getAuthoritativeEvaluations(facts);
 
     try {
-        const result = await getGemini().models.generateContent({
-            model: getModel(),
-            contents:
-                `QUESTIONNAIRE ANSWERS:\n${JSON.stringify(facts)}\n\n` +
-                `RULES ENGINE RESULTS:\n${JSON.stringify(evaluations)}`,
-            config: {
-                systemInstruction: SYSTEM,
-                responseMimeType: "application/json",
-                responseSchema: schema,
-                temperature: 0.2,
-            },
-        });
+        const result = await trackGeminiCall("explain", () => getGemini().models.generateContent({
+                model: getModel(),
+                contents:
+                    `QUESTIONNAIRE ANSWERS:\n${JSON.stringify(facts)}\n\n` +
+                    `RULES ENGINE RESULTS:\n${JSON.stringify(evaluations)}`,
+                config: {
+                    systemInstruction: SYSTEM,
+                    responseMimeType: "application/json",
+                    responseSchema: schema,
+                    temperature: 0.2,
+                    maxOutputTokens: 1024,
+                },
+            }));
         // Invalid or truncated model output becomes null, never raw text.
         const advice = parseAdvice(result.text);
         if (!advice) {

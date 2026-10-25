@@ -4,6 +4,9 @@ import { rankMissingFacts } from "@/lib/rules/engine/missingFacts";
 import { cleanFacts } from "@/lib/gemini/sanitize";
 import { getAuthoritativeEvaluations, getGemini, getModel } from "@/lib/gemini/server";
 import type { FollowUpQuestion } from "@/lib/gemini/types";
+import { FOLLOW_UP_INPUTS, MAX_ADAPTIVE_QUESTIONS } from "@/lib/gemini/followUp";
+import { isRecord, readJsonRequest, RequestBodyError } from "@/lib/api/request";
+import { checkGeminiRateLimit, trackGeminiCall } from "@/lib/health/telemetry";
 
 const SYSTEM = `You write one helpful follow-up question for a college student or recent graduate completing a tax questionnaire.
 Choose exactly one targetFact from ALLOWED MISSING FACTS. Never choose a fact that is not listed.
@@ -21,21 +24,31 @@ const responseSchema = {
 };
 
 export async function POST(req: Request) {
+  const rateLimitResponse = checkGeminiRateLimit(req);
+  if (rateLimitResponse) return rateLimitResponse;
   let body: unknown;
   try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    body = await readJsonRequest(req);
+  } catch (error) {
+    const status = error instanceof RequestBodyError ? error.status : 400;
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid JSON" }, { status });
   }
 
-  const input = (body ?? {}) as Record<string, unknown>;
-  const facts = cleanFacts(input.facts);
+  if (!isRecord(body)) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  const facts = cleanFacts(body.facts);
   if (!facts) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
 
+  const excludedFacts = body.excludedFacts === undefined ? [] : body.excludedFacts;
+  if (!Array.isArray(excludedFacts) || excludedFacts.length > MAX_ADAPTIVE_QUESTIONS ||
+      !excludedFacts.every((fact) => typeof fact === "string" && fact in FOLLOW_UP_INPUTS)) {
+    return NextResponse.json({ error: "Invalid excluded facts" }, { status: 400 });
+  }
+
   const evaluations = getAuthoritativeEvaluations(facts);
-  const ranked = rankMissingFacts(evaluations);
+  const excluded = new Set(excludedFacts);
+  const ranked = rankMissingFacts(evaluations).filter(({ fact }) => !excluded.has(fact) && fact in FOLLOW_UP_INPUTS);
   if (ranked.length === 0) return NextResponse.json({ followUp: null });
 
   const allowedFacts = ranked.map(({ fact, blocksTopics }) => ({
@@ -46,16 +59,17 @@ export async function POST(req: Request) {
   }));
 
   try {
-    const result = await getGemini().models.generateContent({
-      model: getModel(),
-      contents: `CURRENT ANSWERS (context only):\n${JSON.stringify(facts)}\n\nALLOWED MISSING FACTS:\n${JSON.stringify(allowedFacts)}`,
-      config: {
-        systemInstruction: SYSTEM,
-        responseMimeType: "application/json",
-        responseSchema,
-        temperature: 0.2,
-      },
-    });
+    const result = await trackGeminiCall("adaptive-follow-up", () => getGemini().models.generateContent({
+        model: getModel(),
+        contents: `CURRENT ANSWERS (context only):\n${JSON.stringify(facts)}\n\nALLOWED MISSING FACTS:\n${JSON.stringify(allowedFacts)}`,
+        config: {
+          systemInstruction: SYSTEM,
+          responseMimeType: "application/json",
+          responseSchema,
+          temperature: 0.2,
+          maxOutputTokens: 256,
+        },
+      }));
 
     const parsed: unknown = JSON.parse(result.text ?? "");
     if (typeof parsed !== "object" || parsed === null) return NextResponse.json({ followUp: null });

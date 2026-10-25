@@ -8,7 +8,7 @@ export const FIELD_LABELS: Record<keyof QuestionnaireAnswers, string> = {
   workLocation: "Work location",
   ageRange: "Age range",
   educationStatus: "Education status",
-  couldBeClaimedAsDependent: "Could be claimed as a dependent",
+  isClaimedAsDependent: "Will be claimed as a dependent",
   filingStatus: "Filing status",
   incomeTypes: "Income types",
   incomeRange: "Approximate income",

@@ -9,6 +9,8 @@ import type { TaxFacts, TopicEvaluation } from "@/lib/rules/types";
 export interface FollowUpRequest {
   facts: TaxFacts;
   evaluations: TopicEvaluation[];
+  /** Facts already asked, including questions the user skipped. */
+  excludedFacts?: (keyof TaxFacts)[];
 }
 
 export interface FollowUpQuestion {

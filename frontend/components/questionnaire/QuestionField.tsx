@@ -64,6 +64,12 @@ interface MultiSelectProps {
   onChange: (value: string[]) => void;
 }
 
+export function toggleMultiSelectValue(value: string[], optionValue: string): string[] {
+  if (optionValue === "none") return value.includes("none") ? [] : ["none"];
+  if (value.includes(optionValue)) return value.filter((entry) => entry !== optionValue);
+  return [...value.filter((entry) => entry !== "none"), optionValue];
+}
+
 /** Accessible checkbox group for "select all that apply" questions. */
 export function MultiSelectQuestion({
   name,
@@ -74,11 +80,7 @@ export function MultiSelectQuestion({
   onChange,
 }: MultiSelectProps) {
   function toggle(optionValue: string) {
-    if (value.includes(optionValue)) {
-      onChange(value.filter((v) => v !== optionValue));
-    } else {
-      onChange([...value, optionValue]);
-    }
+    onChange(toggleMultiSelectValue(value, optionValue));
   }
 
   return (

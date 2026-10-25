@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAuthoritativeEvaluations, getGemini, getModel } from "@/lib/gemini/server";
 import { cleanFacts } from "@/lib/gemini/sanitize";
+import { isRecord, readJsonRequest, RequestBodyError } from "@/lib/api/request";
+import { checkGeminiRateLimit, trackGeminiCall } from "@/lib/health/telemetry";
 
 const SYSTEM = `You answer follow-up questions from a college student or recent grad about their own taxes.
 Use only the CONTEXT block (questionnaire answers plus authoritative rules engine results).
@@ -18,7 +20,7 @@ function cleanHistory(input: unknown): Turn[] | null {
     if (!Array.isArray(input) || input.length > 6) return null;
     const out: Turn[] = [];
     for (const t of input) {
-        if ((t?.role !== "user" && t?.role !== "assistant") || typeof t?.text !== "string") return null;
+        if (!isRecord(t) || (t.role !== "user" && t.role !== "assistant") || typeof t.text !== "string") return null;
         if (t.text.length > 1000) return null;
         out.push({ role: t.role, text: t.text });
     }
@@ -26,33 +28,36 @@ function cleanHistory(input: unknown): Turn[] | null {
 }
 
 export async function POST(req: Request) {
+    const rateLimitResponse = checkGeminiRateLimit(req);
+    if (rateLimitResponse) return rateLimitResponse;
     let body: unknown;
     try {
-        body = await req.json();
-    } catch {
-        return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+        body = await readJsonRequest(req);
+    } catch (error) {
+        const status = error instanceof RequestBodyError ? error.status : 400;
+        return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid JSON" }, { status });
     }
 
-    const { question, answers, history } = (body ?? {}) as Record<string, unknown>;
-    const facts = cleanFacts(answers);
-    const turns = cleanHistory(history);
-    const q = typeof question === "string" ? question.trim() : "";
+    if (!isRecord(body)) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    const facts = cleanFacts(body.answers);
+    const turns = cleanHistory(body.history);
+    const q = typeof body.question === "string" ? body.question.trim() : "";
     if (!facts || !turns || q.length < 1 || q.length > 500) {
         return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
     const evaluations = getAuthoritativeEvaluations(facts);
 
     try {
-        const result = await getGemini().models.generateContent({
-            model: getModel(),
-            contents: JSON.stringify({
-                answers: facts,
-                rulesResults: evaluations,
-                history: turns,
-                question: q,
-            }),
-            config: { systemInstruction: SYSTEM, temperature: 0.3 },
-        });
+        const result = await trackGeminiCall("ask", () => getGemini().models.generateContent({
+                model: getModel(),
+                contents: JSON.stringify({
+                    answers: facts,
+                    rulesResults: evaluations,
+                    history: turns,
+                    question: q,
+                }),
+                config: { systemInstruction: SYSTEM, temperature: 0.3 },
+            }));
         const answer = (result.text ?? "").slice(0, 2000).trim();
         if (!answer) {
             return NextResponse.json({ error: "Gemini returned an empty response", answer: null }, { status: 502 });

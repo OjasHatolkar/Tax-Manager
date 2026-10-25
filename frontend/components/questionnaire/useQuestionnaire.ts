@@ -25,12 +25,15 @@ const initialState: QuestionnaireState = {
 
 function reducer(state: QuestionnaireState, action: Action): QuestionnaireState {
   switch (action.type) {
-    case "SET_ANSWER":
+    case "SET_ANSWER": {
+      const answers = { ...state.answers, [action.field]: action.value };
       return {
         ...state,
-        answers: { ...state.answers, [action.field]: action.value },
+        answers,
         sources: { ...state.sources, [action.field]: "user_entered" },
+        currentStepIndex: Math.min(state.currentStepIndex, getApplicableSteps(answers).length - 1),
       };
+    }
     case "GO_NEXT": {
       const applicable = getApplicableSteps(state.answers);
       const next = Math.min(state.currentStepIndex + 1, applicable.length - 1);
@@ -102,11 +105,26 @@ export function useQuestionnaire() {
       }
       if (raw) {
         const parsed = JSON.parse(raw) as QuestionnaireState;
-        dispatch({ type: "HYDRATE", state: parsed });
+        // This old field asked whether the user was eligible to be claimed,
+        // which is not the same as being claimed. Discard it and ask again.
+        const answers = { ...parsed.answers } as Record<string, unknown>;
+        delete answers.couldBeClaimedAsDependent;
+        const applicable = getApplicableSteps(answers as QuestionnaireAnswers);
+        const stateToHydrate: QuestionnaireState = {
+          answers: answers as QuestionnaireAnswers,
+          sources: parsed.sources ?? {},
+          currentStepIndex: Number.isInteger(parsed.currentStepIndex)
+            ? Math.max(0, Math.min(parsed.currentStepIndex, applicable.length - 1))
+            : 0,
+        };
+        dispatch({ type: "HYDRATE", state: stateToHydrate });
       }
     } catch {
       // Corrupt or inaccessible storage: safe to ignore, user just restarts.
     }
+    // Hydration is complete only after saved data has been applied; the save
+    // effect depends on this ordering to avoid overwriting existing progress.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHydrated(true);
   }, [storageKey]);
 
