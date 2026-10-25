@@ -36,25 +36,26 @@ export default function PersonalSituationStep({ answers, setAnswer }: StepProps)
       />
 
       <SingleSelectQuestion
-        name="couldBeClaimedAsDependent"
-        label="Could another person claim you as a dependent?"
+        name="isClaimedAsDependent"
+        label="Will someone claim you as a dependent on their return for this tax year?"
         options={[
           { value: "yes", label: "Yes" },
           { value: "no", label: "No" },
           { value: "not_sure", label: "Not sure" },
         ]}
-        value={answers.couldBeClaimedAsDependent}
-        onChange={(v) => setAnswer("couldBeClaimedAsDependent", v)}
+        value={answers.isClaimedAsDependent}
+        onChange={(v) => setAnswer("isClaimedAsDependent", v)}
       />
 
       <SingleSelectQuestion
         name="filingStatus"
-        label="What was your marital status at the end of the tax year?"
+        label="What filing status did you use or expect to use for the tax year?"
         options={[
           { value: "single", label: "Single" },
-          { value: "married_filing_jointly", label: "Married" },
-          { value: "married_filing_separately", label: "Divorced or widowed" },
-          { value: "not_sure", label: "Another situation" },
+          { value: "married_filing_jointly", label: "Married filing jointly" },
+          { value: "married_filing_separately", label: "Married filing separately" },
+          { value: "head_of_household", label: "Head of household" },
+          { value: "not_sure", label: "Not sure / another situation" },
         ]}
         value={answers.filingStatus}
         onChange={(v) => setAnswer("filingStatus", v)}

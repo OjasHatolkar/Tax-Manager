@@ -5,6 +5,8 @@
 .env
 .env.local
 .env.*.local
+/test-results/
+/playwright-report/
 .DS_Store
 *.pem
 npm-debug.log*

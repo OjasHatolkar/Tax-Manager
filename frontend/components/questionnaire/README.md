@@ -1,93 +1,55 @@
-# Questionnaire → Rules Engine → Follow-up pipeline
+# Questionnaire and results flow
 
-This is the guided assessment at `/assessment`. It's wired end to end:
-questionnaire answers → rules engine evaluation → adaptive follow-up
-question — but the AI piece is still a clearly-labeled placeholder (see
-"What's a placeholder" below).
+`Questionnaire.tsx` renders the step wizard at `/assessment`. The screen order
+and conditional steps live in `steps.ts`: Education appears for students and
+recent graduates; State & Local appears for Pennsylvania residents or users
+whose answers indicate multi-state work or residence.
 
-## What's real here
+## State and persistence
 
-- A 6-step adaptive wizard (Tax Year & Location → Personal Situation →
-  Income → Education* → State & Local* → Review). *Education and State &
-  Local only appear when relevant (e.g. Education only shows for
-  students/recent grads) — this is the "adaptive, not every user sees
-  every screen" requirement from the product spec.
-- Answers persist to `localStorage` only, so refreshing the page doesn't
-  lose progress during a demo.
-- The Review step runs live: it maps answers into `lib/rules/`'s `TaxFacts`
-  shape and shows real evaluation results (`may_apply` / `needs_info` /
-  `does_not_apply`) with citations and a document checklist — see
-  `ResultsPanel.tsx`.
-- Fully keyboard-accessible radio/checkbox groups, visible focus states,
-  semantic `<fieldset>`/`<legend>` markup.
+`useQuestionnaire.ts` owns reducer state and writes answers to browser
+`localStorage`. Signed-in users get a key based on their Auth0 profile ID;
+anonymous answers use the legacy anonymous key. When a user signs in for the
+first time, anonymous answers are adopted into the profile key. Data stays in
+that browser and is not server-synced. A legacy dependency answer with changed
+meaning is discarded during hydration so the user can answer the new question.
 
-## What's a placeholder (by design)
+`QuestionField.tsx` provides accessible radio and checkbox groups. The
+multi-select "No income" option excludes other income choices.
 
-- The adaptive follow-up tries Gemini to phrase a question for one of the
-  rules engine's missing facts. If Gemini is unavailable, the UI uses a
-  deterministic rule-based question and labels it as a fallback.
-- No document upload yet (deferred per the product spec's own MVP
-  recommendation).
-- No account-linked save/resume — `localStorage` is a temporary stand-in
-  until Auth0 exists.
+## Results and Gemini
 
-## How the pieces connect
+`mapToTaxFacts.ts` converts coarse questionnaire answers into rules-engine facts
+without guessing exact values that were not collected. `ResultsPanel.tsx` runs
+the deterministic rules for the supported 2025 tax year, displays citations and
+document requirements, and starts a structured adaptive follow-up loop with
+`/api/gemini/adaptive-follow-up`. The user can answer each question using a
+typed control; answers update the rule evaluation and are sent with the next
+request. At most three facts are requested before `/api/gemini/explain` returns
+personalized guidance. Gemini can only select and phrase a supported missing
+fact that the server-side rules engine marked missing. Invalid or unavailable
+question output falls back to deterministic question copy.
 
-```
-components/questionnaire/types.ts       (QuestionnaireAnswers — UI-facing)
-              │
-              ▼  lib/questionnaire/mapToTaxFacts.ts
-              │
-lib/rules/types.ts                      (TaxFacts — rules-engine-facing)
-              │
-              ▼  lib/rules/engine/evaluateTopic.ts, missingFacts.ts
-              │
-TopicEvaluation[]  ──────────────►  components/questionnaire/ResultsPanel.tsx
-              │                                   │
-              ▼                                   ▼
-   lib/gemini/followUp.ts            (renders checklist, topics, citations)
-   (deterministic fallback today;
-    real Gemini call = next step)
-```
-
-Each layer only imports from the one below it — the questionnaire UI never
-reaches into rule internals directly, and the rules engine has zero
-knowledge of React/Next. Swap any one layer without touching the others.
+Other server endpoints provide contextual Q&A (`/api/gemini/ask` and its
+`/api/gemini/follow-up` alias) and structured explanations
+(`/api/gemini/explain`). The Gemini key stays on the server. Request facts are
+allowlisted and rule evaluations are rebuilt server-side.
 
 ## Files
 
-```
-components/questionnaire/
-├── types.ts                 Answer + step type definitions
-├── steps.ts                 Step order + conditional "isApplicable" logic
-├── useQuestionnaire.ts       State (useReducer) + localStorage persistence
-├── Questionnaire.tsx         Top-level wizard controller
-├── ProgressBar.tsx
-├── QuestionField.tsx         Reusable single/multi-select question UI
-├── reviewLabels.ts           Human-readable labels for the Review step
-├── ResultsPanel.tsx          Runs rules engine + follow-up, renders results
-└── steps/
-    ├── TaxYearLocationStep.tsx
-    ├── PersonalSituationStep.tsx
-    ├── IncomeStep.tsx
-    ├── EducationStep.tsx
-    ├── StateLocalStep.tsx
-    └── ReviewStep.tsx
+- `types.ts` — answer, state, provenance, and step types.
+- `steps.ts` — ordered step definitions and applicability predicates.
+- `useQuestionnaire.ts` — reducer, Auth0 profile lookup, persistence, and
+  legacy answer migration.
+- `Questionnaire.tsx` — top-level step routing and navigation controls.
+- `ProgressBar.tsx` — current-step progress and labels.
+- `QuestionField.tsx` — reusable accessible radio/checkbox fields.
+- `reviewLabels.ts` — user-facing answer labels for the review summary.
+- `ResultsPanel.tsx` — deterministic rule results, bounded follow-up answers,
+  and personalized Gemini guidance.
+- `steps/*.tsx` — individual tax year/location, personal, income, education,
+  state/local, and review screens.
+- `../../lib/questionnaire/mapToTaxFacts.ts` — bridge to the tax-rules model.
 
-lib/questionnaire/
-└── mapToTaxFacts.ts          Bridges QuestionnaireAnswers -> TaxFacts
-
-lib/gemini/                   Gemini client, validation, and fallback
-├── types.ts                  Shared request/response shapes
-└── followUp.ts               Adaptive API call + deterministic fallback
-
-app/api/gemini/
-├── adaptive-follow-up/route.ts  Structured adaptive question endpoint
-├── ask/route.ts                 Q&A endpoint alias
-├── follow-up/route.ts           Q&A endpoint
-└── explain/route.ts             Structured topic explanation endpoint
-```
-
-Gemini API keys must be kept in server-only environment variables. The
-server recomputes evaluations from validated facts; client-supplied rule
-results are not treated as authoritative.
+See `../../tests/unit.test.ts` and `../../tests/e2e/` for unit and browser
+coverage.

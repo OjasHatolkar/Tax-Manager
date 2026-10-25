@@ -42,7 +42,7 @@ export interface QuestionnaireAnswers {
     | "part_time_student"
     | "graduated_this_year"
     | "not_a_student";
-  couldBeClaimedAsDependent?: YesNoUnsure;
+  isClaimedAsDependent?: YesNoUnsure;
   filingStatus?: FilingStatus;
 
   // --- Section 3: Income ---

@@ -48,8 +48,13 @@ export default function AuthButtons({
   }
 
   return (
-    <a href="/auth/login?returnTo=/assessment" className={linkClassName}>
-      Sign in
-    </a>
+    <>
+      <a href="/auth/login?returnTo=/assessment" className={linkClassName}>
+        Sign in
+      </a>
+      <a href="/sign-up" className={linkClassName}>
+        Create account
+      </a>
+    </>
   );
 }

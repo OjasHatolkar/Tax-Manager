@@ -47,12 +47,13 @@ export default function TrustPrivacy() {
                 Where things stand right now
               </p>
               <p className="mt-2 text-sm leading-relaxed text-forest-800/90">
-                This version is a landing page and product preview only. No
-                tax data is collected, no AI model is called, and
-                authentication is not yet active. Features described below
-                are design goals for upcoming development, not current
-                functionality — we&apos;ll update this section as each piece
-                ships.
+                The assessment currently collects questionnaire answers and
+                stores progress in this browser&apos;s localStorage. When you view
+                results, validated facts are sent to server-side Gemini routes
+                for adaptive wording; the API key stays on the server. Sign-in
+                uses Auth0 when configured. Rules currently cover the 2025 tax
+                year only. Do not enter Social Security numbers or other
+                sensitive identifiers.
               </p>
             </div>
           </div>

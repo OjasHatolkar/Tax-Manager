@@ -23,8 +23,8 @@ export default function TaxYearLocationStep({ answers, setAnswer }: StepProps) {
         label="Which tax year do you need help with?"
         options={[
           { value: "2025", label: "2025 tax return" },
-          { value: "2026_planning", label: "2026 tax planning" },
-          { value: "other", label: "Another supported tax year" },
+          { value: "2026_planning", label: "2026 tax planning (rules not yet available)" },
+          { value: "other", label: "Another tax year (rules not yet available)" },
         ]}
         value={answers.taxYear}
         onChange={(v) => setAnswer("taxYear", v)}

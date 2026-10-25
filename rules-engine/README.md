@@ -1,68 +1,37 @@
-# Tax Help — Rules Engine
+# Standalone tax rules engine
 
-A standalone, deterministic, versioned tax-rules engine for the Tax Help
-hackathon project (tax year 2025: U.S. federal + Pennsylvania). This
-package is **pure TypeScript logic and data — no UI, no network calls,
-no AI**. It is intentionally separate from the landing-page Next.js
-project (`tax-help-landing-page/`) so the tax logic can be reviewed,
-tested, and versioned independently.
+This directory is a standalone package containing a deterministic, versioned
+screening engine for selected 2025 U.S. federal and Pennsylvania tax topics. It
+does not include UI, Auth0, Gemini, or tax-return preparation.
 
-## What's in here
+Rules are data under `rules/data/`; `rules/engine/` evaluates those rules with
+three-valued logic (`true`, `false`, `unknown`). Missing facts remain unknown
+and produce `needs_info` instead of an assumed negative answer. Results are
+limited to `may_apply`, `does_not_apply`, and `needs_info`, with citations.
 
-- `rules/types.ts` — shared types: `TaxFacts`, `TopicRule`, `RuleSet`,
-  and the three-valued `Tri` (`true | false | "unknown"`) type that
-  prevents the engine from silently treating missing info as "no".
-- `rules/engine/evaluate.ts` — three-valued (Kleene) condition logic.
-- `rules/engine/evaluateTopic.ts` — turns a rule + facts into
-  `may_apply` / `does_not_apply` / `needs_info`. Never returns
-  "confirmed eligible."
-- `rules/engine/missingFacts.ts` — ranks missing facts by how many
-  topics they would unblock, for driving adaptive follow-up questions.
-- `rules/data/federal-2025.ts` — federal filing requirement, EITC,
-  American Opportunity Credit, Lifetime Learning Credit, student loan
-  interest deduction, Saver's Credit, taxable scholarship income.
-- `rules/data/pennsylvania-2025.ts` — PA Tax Forgiveness (Schedule SP),
-  Local Services Tax, local Earned Income Tax flag.
-- `rules/__tests__/scenarios.test.ts` — the three hackathon test
-  personas (college student, student with a side hustle, recent
-  graduate), run as real assertions against the engine.
+## Run scenarios
 
-## Run it
-
-```bash
+```powershell
 npm install
 npm test
 ```
 
-This runs all 21 behavioral tests and prints pass/fail to the console.
+The scenario script runs 21 behavioral assertions across student, side-hustle,
+recent-graduate, Pennsylvania, and selected federal credit examples.
 
-## How this connects to the rest of Tax Help
+## Relationship to the web app
 
-This package has no dependency on Next.js, React, or the landing page.
-To use it inside the main app, copy `rules/` into that project's
-`lib/rules/` folder (or install this package locally) and import from
-it, e.g.:
+The active Next.js app is in `frontend/`. It currently contains a separate copy
+of these rules under `frontend/lib/rules/`; the frontend runs its own scenarios
+as part of `npm test`. The copies can drift, so rule changes should be applied
+to both and both suites should be run until the logic is consolidated into a
+shared workspace package.
 
-```ts
-import { evaluateTopic } from "./rules/engine/evaluateTopic";
-import { federalRuleSet2025 } from "./rules/data/federal-2025";
-```
+## Known limits
 
-The questionnaire (not yet built) is responsible for producing a
-`TaxFacts` object from user answers. This engine only evaluates facts
-it's given — it never asks questions itself and never calls Gemini or
-any external API. Gemini's future role is to explain this engine's
-output in plain English, not to replace it.
-
-## Scope and honesty notes
-
-- Verified against IRS.gov and PA.gov for tax year 2025 as of the build
-  date. Tax law changes yearly — re-verify before reusing in another
-  year.
-- Known gaps: PA Tax Forgiveness only implements the 100%-forgiveness
-  threshold, not the partial 10–90% sliding scale above it. Local EIT
-  rates are never hardcoded (they vary by ~2,500 PA municipalities) —
-  the engine flags "investigate your local rate" instead of guessing.
-  Child Tax Credit and Premium Tax Credit are not yet modeled.
-- This engine never produces a refund estimate or guarantees eligibility
-  for any credit or deduction.
+The rule data is a screening aid, not a tax determination. Pennsylvania Tax
+Forgiveness implements the 100%-forgiveness ceiling but not partial-credit
+tiers above it. Child Tax Credit, Premium Tax Credit, itemized deductions,
+capital gains, rental income, multi-state apportionment, AMT, and specific
+local Earned Income Tax rates are not modeled. Verify rules for the relevant
+filing year against the cited official sources before relying on them.

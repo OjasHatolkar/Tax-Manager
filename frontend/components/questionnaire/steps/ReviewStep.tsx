@@ -15,9 +15,8 @@ export default function ReviewStep({ answers }: StepProps) {
   return (
     <div>
       <p className="text-sm text-ink-600">
-        Here&apos;s what you&apos;ve told us so far. In the full version of Tax
-        Help, this is where you&apos;d confirm details before seeing which
-        topics may apply to you.
+        Review your answers, deterministic rule results, and documents to
+        investigate. Results are illustrative guidance, not a tax determination.
       </p>
 
       <dl className="mt-6 divide-y divide-forest-100 rounded-xl border border-forest-200 bg-white">
@@ -39,10 +38,8 @@ export default function ReviewStep({ answers }: StepProps) {
       </dl>
 
       <div className="mt-6 rounded-xl border border-forest-200 bg-forest-50 px-4 py-4 text-sm text-forest-800">
-        This preview does not calculate or save anything yet. Once the
-        full assessment is connected to Tax Help&apos;s rules engine, this
-        screen will lead to a personalized document checklist and list of
-        topics worth investigating — never a guaranteed result.
+        The rules engine screens supported 2025 topics only. Gemini may help
+        phrase one missing-fact question; it does not determine eligibility.
       </div>
     </div>
   );

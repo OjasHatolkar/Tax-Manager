@@ -29,7 +29,7 @@ export function mapToTaxFacts(answers: QuestionnaireAnswers): TaxFacts {
   if (answers.filingStatus && answers.filingStatus !== "not_sure") {
     facts.filingStatus = answers.filingStatus;
   }
-  facts.isClaimedAsDependent = yesNoToBool(answers.couldBeClaimedAsDependent);
+  facts.isClaimedAsDependent = yesNoToBool(answers.isClaimedAsDependent);
 
   // --- Age (engine wants a number; questionnaire collects a range, so we
   // only set it when the range is unambiguous enough to not mislead a
@@ -48,9 +48,11 @@ export function mapToTaxFacts(answers: QuestionnaireAnswers): TaxFacts {
   }
 
   // --- Student / education ---
-  facts.isStudent =
-    answers.educationStatus === "full_time_student" ||
-    answers.educationStatus === "part_time_student";
+  if (answers.educationStatus) {
+    facts.isStudent =
+      answers.educationStatus === "full_time_student" ||
+      answers.educationStatus === "part_time_student";
+  }
   facts.isHalfTimeOrMoreStudent =
     answers.educationStatus === "full_time_student" ? true : undefined;
   facts.paidTuitionOrEnrollmentFees = yesNoToBool(answers.paidTuitionOrEducationExpenses);
@@ -60,7 +62,9 @@ export function mapToTaxFacts(answers: QuestionnaireAnswers): TaxFacts {
   facts.paidStudentLoanInterest = yesNoToBool(answers.paidStudentLoanInterest);
 
   // --- Pennsylvania / local ---
-  facts.isPennsylvaniaResident = answers.residenceState === "PA";
+  if (answers.residenceState) {
+    facts.isPennsylvaniaResident = answers.residenceState === "PA";
+  }
   facts.workedOrLivedInPaLocalJurisdiction = yesNoToBool(answers.mayHaveLocalIncomeTax);
 
   return facts;

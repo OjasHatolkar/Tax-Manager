@@ -63,7 +63,7 @@ export default function Questionnaire() {
 
         <div className="mt-2">{renderStep()}</div>
 
-        {isReviewStep && <ResultsPanel answers={answers} />}
+        {isReviewStep && <ResultsPanel key={JSON.stringify(answers)} answers={answers} />}
       </div>
 
       <div className="mt-6 flex items-center justify-between">
@@ -95,9 +95,9 @@ export default function Questionnaire() {
       </div>
 
       <p className="mt-6 text-center text-xs text-ink-500">
-        Your progress is saved only in this browser (localStorage) for now —
-        not to an account. Account-linked save &amp; resume requires sign-in,
-        which is not yet implemented.
+        Your progress is saved in this browser. When signed in, the browser
+        uses a separate localStorage key for your Auth0 profile; answers are
+        not synced to a server account.
       </p>
     </div>
   );
