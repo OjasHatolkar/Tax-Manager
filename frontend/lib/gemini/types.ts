@@ -1,11 +1,7 @@
 /**
  * Shared types for the Gemini integration boundary.
  *
- * TEAMMATE-OWNED FILE AREA: everything under lib/gemini/ and
- * app/api/gemini/ is where Gemini work lives. Nothing in
- * components/questionnaire/ or lib/rules/ needs to change for this
- * integration to go from placeholder to real — only the function bodies
- * in this folder need to be filled in.
+ * Shared request and response types for the server-side Gemini boundary.
  */
 
 import type { TaxFacts, TopicEvaluation } from "@/lib/rules/types";
@@ -27,14 +23,12 @@ export interface FollowUpQuestion {
   source: "gemini" | "deterministic_fallback";
 }
 
-export interface ExplainTopicRequest {
-  evaluation: TopicEvaluation;
-  facts: TaxFacts;
+export interface ExplainRequest {
+  answers: TaxFacts;
 }
 
-export interface TopicExplanation {
-  /** Plain-English explanation grounded in the rule's own summary/citations
-   * — the model should not introduce facts beyond what's passed in. */
-  explanation: string;
-  source: "gemini" | "deterministic_fallback";
+export interface ExplainAdvice {
+  summary: string;
+  actions: { title: string; detail: string }[];
+  caveats: string[];
 }

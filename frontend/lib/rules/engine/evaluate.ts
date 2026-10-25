@@ -7,7 +7,7 @@
  *
  * This file contains NO tax rules and NO AI calls â€” it only walks a
  * RuleCondition tree against a TaxFacts object. See lib/rules/data for the
- * actual tax logic and lib/gemini (future) for anything AI-related.
+ * actual tax logic; Gemini is kept separate from this deterministic engine.
  */
 
 import type { FactCondition, RuleCondition, TaxFacts, Tri } from "../types";

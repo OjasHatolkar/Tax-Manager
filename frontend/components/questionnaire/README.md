@@ -23,13 +23,9 @@ question — but the AI piece is still a clearly-labeled placeholder (see
 
 ## What's a placeholder (by design)
 
-- **The follow-up question is NOT yet AI-generated.** `ResultsPanel.tsx`
-  calls `lib/gemini/followUp.ts`, which currently returns a deterministic,
-  rule-based question (picks whichever missing fact would resolve the most
-  pending topics — see `rankMissingFacts` in `lib/rules/engine/`). The UI
-  shows a visible "Placeholder — rule-based fallback" badge so this is
-  never mistaken for real AI output. See `lib/gemini/followUp.ts`'s header
-  comment for the exact steps to wire up real Gemini calls.
+- The adaptive follow-up tries Gemini to phrase a question for one of the
+  rules engine's missing facts. If Gemini is unavailable, the UI uses a
+  deterministic rule-based question and labels it as a fallback.
 - No document upload yet (deferred per the product spec's own MVP
   recommendation).
 - No account-linked save/resume — `localStorage` is a temporary stand-in
@@ -81,18 +77,17 @@ components/questionnaire/
 lib/questionnaire/
 └── mapToTaxFacts.ts          Bridges QuestionnaireAnswers -> TaxFacts
 
-lib/gemini/                   ← teammate's integration area
+lib/gemini/                   Gemini client, validation, and fallback
 ├── types.ts                  Shared request/response shapes
-└── followUp.ts                Deterministic fallback + wiring instructions
+└── followUp.ts               Adaptive API call + deterministic fallback
 
-app/api/gemini/                ← teammate's integration area
-├── follow-up/route.ts        Stub server route (501 until implemented)
-└── explain/route.ts          Stub server route (501 until implemented)
+app/api/gemini/
+├── adaptive-follow-up/route.ts  Structured adaptive question endpoint
+├── ask/route.ts                 Q&A endpoint alias
+├── follow-up/route.ts           Q&A endpoint
+└── explain/route.ts             Structured topic explanation endpoint
 ```
 
-## Next step for whoever owns Gemini
-
-Everything needed to go from placeholder to real is isolated in
-`lib/gemini/` and `app/api/gemini/` — see the header comment in
-`lib/gemini/followUp.ts` for the exact 4-step plan. Nothing in
-`components/questionnaire/` or `lib/rules/` needs to change.
+Gemini API keys must be kept in server-only environment variables. The
+server recomputes evaluations from validated facts; client-supplied rule
+results are not treated as authoritative.

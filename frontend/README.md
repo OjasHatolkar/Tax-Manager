@@ -51,14 +51,13 @@ npm run lint       # Next.js / ESLint checks
 
 ## Environment variables
 
-Copy `.env.example` to `.env.local` and fill in values when you start
-wiring up Gemini and Auth0. **None of these are required to run the
-current landing page** — the app runs with zero environment variables
-today.
+Copy `.env.example` to `.env.local` and set the Gemini key for AI-backed
+questionnaire features. Auth0 settings remain future configuration.
 
 | Variable | Used for |
 |---|---|
-| `GEMINI_API_KEY` | Server-side only. Future adaptive follow-up questions & plain-English explanations. |
+| `GEMINI_API_KEY` | Server-side only. Used by Gemini API routes. |
+| `GEMINI_API_MODEL` | Server-side model ID; defaults to `gemini-3.8-flash` in the example. |
 | `AUTH0_SECRET`, `AUTH0_BASE_URL`, `AUTH0_ISSUER_BASE_URL`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET` | Future Auth0 sign-in and saved-progress features. |
 
 ## Project structure
@@ -88,8 +87,8 @@ This separation is deliberate so later work stays isolated:
 - **Landing page UI** — `app/page.tsx`, `components/landing/*` (done).
 - **Questionnaire & adaptive follow-up logic** — will live under
   `app/assessment/` and a new `lib/assessment/` module.
-- **Gemini integration** — will live under `lib/gemini/`, called only from
-  server-side route handlers/actions, never from client components.
+- **Gemini integration** — lives under `lib/gemini/` and server-side API
+  routes. The browser never receives the API key.
 - **Auth0 authentication** — will live under `lib/auth/` and
   `app/api/auth/[...auth0]/`, following `@auth0/nextjs-auth0`.
 - **Versioned tax rules & deterministic calculations** — will live under
@@ -114,9 +113,8 @@ This separation is deliberate so later work stays isolated:
 
 ## What's a placeholder (by design)
 
-- **Gemini API** — not called anywhere. No adaptive questions, no
-  AI-generated explanations exist yet. `lib/README.md` documents where
-  this will live.
+- **Gemini API** — adaptive follow-up and server-side explain/Q&A endpoints
+  are implemented. Auth0 is still a placeholder.
 - **Auth0** — no real or simulated authentication. `/sign-in` is an
   honest "not connected yet" page with a setup checklist.
 - **Assessment / questionnaire** — `/assessment` is a preview, not a
@@ -158,7 +156,5 @@ What **was** verified without installing dependencies:
 3. Start the guided questionnaire UI in `app/assessment/`, backed by a
    new `lib/assessment/` module for question flow state — still with no
    AI calls.
-4. Wire up Gemini behind a server-only route handler once the
-   questionnaire has real data to react to.
-5. Implement Auth0 (`@auth0/nextjs-auth0`) once there's an account-gated
+4. Implement Auth0 (`@auth0/nextjs-auth0`) once there's an account-gated
    feature (saved assessments) worth protecting.

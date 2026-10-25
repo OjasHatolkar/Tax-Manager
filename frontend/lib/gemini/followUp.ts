@@ -1,28 +1,11 @@
 /**
  * ============================================================================
- * GEMINI INTEGRATION POINT — PLACEHOLDER, NOT YET WIRED TO GEMINI
+ * Gemini-backed adaptive follow-up questions with a deterministic fallback.
  * ============================================================================
  *
- * This is the single function the questionnaire UI calls to get an adaptive
- * follow-up question. Today it returns a DETERMINISTIC fallback derived
- * directly from the rules engine's own missing-fact ranking — no AI call
- * happens here yet, and the returned `source: "deterministic_fallback"`
- * flag makes that visible to the UI (see ResultsPanel.tsx) instead of
- * quietly pretending to be AI-generated.
- *
- * TO WIRE UP REAL GEMINI (next step for whoever owns this):
- *   1. Add GEMINI_API_KEY to .env.local (server-only — never prefix with
- *      NEXT_PUBLIC_, never import this key into a "use client" file).
- *   2. Implement app/api/gemini/follow-up/route.ts as a POST handler that
- *      calls the Gemini API server-side with `facts` + `evaluations`,
- *      asking it to pick ONE of the engine's own `missingFacts` entries
- *      and phrase a friendly question + rationale for it.
- *   3. Validate the model's JSON response against the FollowUpQuestion
- *      shape before returning it — reject/fallback on malformed output.
- *   4. Replace the body of `getAdaptiveFollowUp` below with a `fetch("/api/
- *      gemini/follow-up", ...)` call, falling back to
- *      `deterministicFollowUp()` if the request fails or returns invalid
- *      data (keep the fallback — it's a good safety net, not dead code).
+ * The adaptive route may only select a fact ranked as missing by the rules
+ * engine. The API key stays on the server, and all failures use the
+ * deterministic question so the questionnaire remains available.
  *
  * IMPORTANT: Gemini must only ever choose WHICH known-missing fact to ask
  * about and HOW to phrase it. It must never invent a new tax rule, a new
@@ -90,12 +73,48 @@ export function deterministicFollowUp(request: FollowUpRequest): FollowUpQuestio
 }
 
 /**
- * Public entry point the UI calls. Currently always resolves to the
- * deterministic fallback — see the file header for the exact steps to
- * replace this with a real Gemini-backed call.
+ * Public entry point called by the questionnaire UI.
  */
 export async function getAdaptiveFollowUp(
   request: FollowUpRequest
 ): Promise<FollowUpQuestion | null> {
-  return deterministicFollowUp(request);
+  const fallback = deterministicFollowUp(request);
+  if (!fallback) return null;
+
+  const allowedFacts = new Set(rankMissingFacts(request.evaluations).map(({ fact }) => fact));
+  try {
+    const response = await fetch("/api/gemini/adaptive-follow-up", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    });
+    if (!response.ok) return fallback;
+
+    const payload: unknown = await response.json();
+    if (typeof payload !== "object" || payload === null || !("followUp" in payload)) return fallback;
+    const followUp = (payload as { followUp: unknown }).followUp;
+    if (typeof followUp !== "object" || followUp === null) return fallback;
+
+    const candidate = followUp as Record<string, unknown>;
+    if (
+      typeof candidate.targetFact !== "string" ||
+      !allowedFacts.has(candidate.targetFact as keyof FollowUpRequest["facts"]) ||
+      typeof candidate.question !== "string" ||
+      candidate.question.trim().length === 0 ||
+      candidate.question.length > 240 ||
+      typeof candidate.rationale !== "string" ||
+      candidate.rationale.trim().length === 0 ||
+      candidate.rationale.length > 400 ||
+      candidate.source !== "gemini"
+    ) return fallback;
+
+    return {
+      targetFact: candidate.targetFact as keyof FollowUpRequest["facts"],
+      question: candidate.question.trim(),
+      rationale: candidate.rationale.trim(),
+      source: "gemini",
+    };
+  } catch {
+    return fallback;
+  }
 }

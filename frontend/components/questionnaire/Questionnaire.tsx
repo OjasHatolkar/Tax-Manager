@@ -16,7 +16,7 @@ import ReviewStep from "./steps/ReviewStep";
  * Top-level controller for the guided assessment. This file intentionally
  * contains very little logic of its own — state lives in useQuestionnaire,
  * step content lives in steps/*.tsx, and results come from ResultsPanel
- * (which calls the rules engine + the Gemini placeholder). Swap any one of
+ * (which calls the rules engine + Gemini-backed follow-up). Swap any one of
  * those out without touching this file.
  */
 export default function Questionnaire() {
