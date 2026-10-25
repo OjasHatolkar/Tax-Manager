@@ -1,10 +1,13 @@
-"use client";
+﻿"use client";
 
-import { useCallback, useEffect, useReducer } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import type { QuestionnaireAnswers, QuestionnaireState } from "./types";
 import { getApplicableSteps } from "./steps";
 
-const STORAGE_KEY = "taxhelp.assessment.v1";
+// Anonymous visitors keep using the original key, so existing saved data
+// still loads. Signed-in users get their own key, based on their Auth0 id.
+const BASE_KEY = "taxhelp.assessment.v1";
+const ANON_KEY = BASE_KEY;
 
 type Action =
   | { type: "SET_ANSWER"; field: keyof QuestionnaireAnswers; value: unknown }
@@ -47,36 +50,76 @@ function reducer(state: QuestionnaireState, action: Action): QuestionnaireState 
 }
 
 /**
- * Drives the questionnaire wizard. Progress is persisted to localStorage
- * only — this is a clearly temporary stand-in for real account-linked
- * save/resume, which requires Auth0 (not yet implemented). See
- * components/questionnaire/README.md.
+ * Drives the questionnaire wizard. Progress is saved to localStorage in this
+ * browser only (it does not sync across devices). When signed in with Auth0,
+ * progress is stored under that user's id; otherwise under an anonymous key.
  */
 export function useQuestionnaire() {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [storageKey, setStorageKey] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
-  // Hydrate from localStorage once, on mount.
+  // 1. Work out which storage key to use (signed-in user or anonymous).
   useEffect(() => {
+    let cancelled = false;
+    async function resolveKey() {
+      let key = ANON_KEY;
+      try {
+        const res = await fetch("/auth/profile", {
+          cache: "no-store",
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data.sub === "string") {
+            key = BASE_KEY + ".user." + data.sub;
+          }
+        }
+      } catch {
+        // Not signed in or unreachable: fall back to the anonymous key.
+      }
+      if (!cancelled) setStorageKey(key);
+    }
+    resolveKey();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // 2. Load saved progress once the key is known.
+  useEffect(() => {
+    if (!storageKey) return;
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
+      let raw = window.localStorage.getItem(storageKey);
+      // Signed in with no saved progress yet: adopt anonymous progress.
+      if (!raw && storageKey !== ANON_KEY) {
+        const anonRaw = window.localStorage.getItem(ANON_KEY);
+        if (anonRaw) {
+          raw = anonRaw;
+          window.localStorage.setItem(storageKey, anonRaw);
+          window.localStorage.removeItem(ANON_KEY);
+        }
+      }
       if (raw) {
         const parsed = JSON.parse(raw) as QuestionnaireState;
         dispatch({ type: "HYDRATE", state: parsed });
       }
     } catch {
-      // Corrupt or inaccessible storage — safe to ignore, user just restarts.
+      // Corrupt or inaccessible storage: safe to ignore, user just restarts.
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    setHydrated(true);
+  }, [storageKey]);
 
-  // Persist on every change.
+  // 3. Save on every change, but only after loading has finished so the
+  //    empty starting state can never overwrite real progress.
   useEffect(() => {
+    if (!storageKey || !hydrated) return;
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      window.localStorage.setItem(storageKey, JSON.stringify(state));
     } catch {
-      // Storage full or disabled — questionnaire still works, just won't resume.
+      // Storage full or disabled: questionnaire still works, just won't resume.
     }
-  }, [state]);
+  }, [state, storageKey, hydrated]);
 
   const setAnswer = useCallback(
     (field: keyof QuestionnaireAnswers, value: unknown) =>
@@ -89,12 +132,12 @@ export function useQuestionnaire() {
   const goTo = useCallback((index: number) => dispatch({ type: "GO_TO", index }), []);
   const reset = useCallback(() => {
     try {
-      window.localStorage.removeItem(STORAGE_KEY);
+      if (storageKey) window.localStorage.removeItem(storageKey);
     } catch {
       // ignore
     }
     dispatch({ type: "RESET" });
-  }, []);
+  }, [storageKey]);
 
   const steps = getApplicableSteps(state.answers);
   const currentStep = steps[Math.min(state.currentStepIndex, steps.length - 1)];

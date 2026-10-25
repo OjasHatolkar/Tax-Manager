@@ -1,10 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import Logo from "@/components/ui/Logo";
 import Button from "@/components/ui/Button";
+import AuthButtons from "./AuthButtons";
 
 const navLinks = [
   { label: "How It Works", href: "#how-it-works" },
@@ -40,12 +41,10 @@ export default function Navbar() {
         </ul>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link
-            href="/sign-in"
-            className="text-sm font-medium text-ink-700 transition-colors hover:text-forest-800"
-          >
-            Sign In
-          </Link>
+          <AuthButtons
+            linkClassName="text-sm font-medium text-ink-700 transition-colors hover:text-forest-800"
+            labelClassName="text-sm text-ink-700"
+          />
           <Button href="/assessment" size="md">
             Get Started
           </Button>
@@ -83,13 +82,12 @@ export default function Navbar() {
               </li>
             ))}
             <li className="mt-2 border-t border-forest-100 pt-3">
-              <Link
-                href="/sign-in"
-                onClick={() => setOpen(false)}
-                className="block rounded-lg px-2 py-2.5 text-base font-medium text-ink-700 hover:bg-forest-50"
-              >
-                Sign In
-              </Link>
+              <div className="flex items-center justify-between px-2 py-2.5">
+                <AuthButtons
+                  linkClassName="text-base font-medium text-ink-700 hover:text-forest-800"
+                  labelClassName="text-base text-ink-700"
+                />
+              </div>
             </li>
             <li className="pt-1">
               <Button href="/assessment" className="w-full">
