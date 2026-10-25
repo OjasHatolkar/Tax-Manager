@@ -1,0 +1,25 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id // Auth0 sub ID
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  questionnaire QuestionnaireResponse?
+}
+
+model QuestionnaireResponse {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers    Json
+  isComplete Boolean  @default(false)
+  updatedAt  DateTime @updatedAt
+}
