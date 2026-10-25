@@ -47,6 +47,9 @@ Auth0 tenant can view the aggregate metrics at `/health`.
 - `/assessment` — adaptive questionnaire. Progress is stored in browser
   `localStorage`, in a key scoped to the Auth0 profile when signed in; it is not
   synchronized to a server account.
+- `/tasks` — signed-in users can review, complete, reopen, and delete topic
+  tasks. Tasks are saved in browser `localStorage` under the Auth0 profile ID,
+  so they survive logout/login in that browser but do not sync across devices.
 - `/api/gemini/adaptive-follow-up` — returns one structured question about a
   missing fact selected by the deterministic rules engine. The assessment
   accepts up to three answers and then requests personalized guidance.

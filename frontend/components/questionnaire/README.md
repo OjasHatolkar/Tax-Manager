@@ -26,9 +26,12 @@ document requirements, and starts a structured adaptive follow-up loop with
 `/api/gemini/adaptive-follow-up`. The user can answer each question using a
 typed control; answers update the rule evaluation and are sent with the next
 request. At most three facts are requested before `/api/gemini/explain` returns
-personalized guidance. Gemini can only select and phrase a supported missing
-fact that the server-side rules engine marked missing. Invalid or unavailable
-question output falls back to deterministic question copy.
+personalized guidance. Signed-in users can select evaluated topics to save as
+individual tasks. Tasks are scoped to the Auth0 profile in this browser's local
+storage; they are not synced to a server or across devices. Gemini can only
+select and phrase a supported missing fact that the server-side rules engine
+marked missing. Invalid or unavailable question output falls back to
+deterministic question copy.
 
 Other server endpoints provide contextual Q&A (`/api/gemini/ask` and its
 `/api/gemini/follow-up` alias) and structured explanations
@@ -47,6 +50,7 @@ allowlisted and rule evaluations are rebuilt server-side.
 - `reviewLabels.ts` — user-facing answer labels for the review summary.
 - `ResultsPanel.tsx` — deterministic rule results, bounded follow-up answers,
   and personalized Gemini guidance.
+- `../tasks/TaskDashboard.tsx` — signed-in users' saved topic tasks.
 - `steps/*.tsx` — individual tax year/location, personal, income, education,
   state/local, and review screens.
 - `../../lib/questionnaire/mapToTaxFacts.ts` — bridge to the tax-rules model.

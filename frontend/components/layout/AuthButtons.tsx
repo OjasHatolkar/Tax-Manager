@@ -1,45 +1,26 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useAuthProfile } from "@/lib/auth/useAuthProfile";
 
 type Props = {
   linkClassName?: string;
   labelClassName?: string;
 };
 
-type User = { name?: string; email?: string };
-
 export default function AuthButtons({
   linkClassName = "text-sm font-medium hover:underline",
   labelClassName = "text-sm",
 }: Props) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/auth/profile", { cache: "no-store", credentials: "include" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!cancelled) setUser(data && (data.email || data.name) ? data : null);
-      })
-      .catch(() => {
-        if (!cancelled) setUser(null);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { profile, loading } = useAuthProfile();
 
   if (loading) return null;
 
-  if (user) {
+  if (profile) {
     return (
       <>
-        <span className={labelClassName}>{user.name ?? user.email}</span>
+        <span className={labelClassName}>{profile.name ?? profile.email ?? "Account"}</span>
+        <Link href="/tasks" className={linkClassName}>My Tasks</Link>
         <a href="/auth/logout" className={linkClassName}>
           Sign out
         </a>

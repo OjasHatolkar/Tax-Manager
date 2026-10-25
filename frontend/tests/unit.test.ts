@@ -13,6 +13,7 @@ import { evaluateCondition } from "@/lib/rules/engine/evaluate";
 import { rankMissingFacts } from "@/lib/rules/engine/missingFacts";
 import type { TopicEvaluation } from "@/lib/rules/types";
 import { checkGeminiRateLimit, getTelemetrySnapshot, trackGeminiCall } from "@/lib/health/telemetry";
+import { deleteUserTask, getUserTasksStorageKey, readUserTasks, toggleUserTask, writeUserTasks, type UserTask } from "@/lib/tasks/storage";
 
 const originalFetch = globalThis.fetch;
 afterEach(() => {
@@ -87,6 +88,25 @@ test("income multi-select keeps the explicit no-income choice exclusive", () => 
   assert.deepEqual(toggleMultiSelectValue(["w2"], "none"), ["none"]);
   assert.deepEqual(toggleMultiSelectValue(["none"], "freelance_gig"), ["freelance_gig"]);
   assert.deepEqual(toggleMultiSelectValue(["w2", "freelance_gig"], "w2"), ["freelance_gig"]);
+});
+
+test("saved tasks are scoped to an Auth0 profile and can be completed, reopened, and deleted", () => {
+  const values = new Map<string, string>();
+  const storage = {
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => { values.set(key, value); },
+  };
+  const task: UserTask = {
+    id: "task-1", topicId: "student-loan", title: "Student loan interest", summary: "Check the relevant documents.",
+    taxYear: 2025, status: "incomplete", createdAt: "2026-10-25T12:00:00.000Z", citations: [],
+  };
+  writeUserTasks("auth0|user/one", [task], storage);
+  assert.match(getUserTasksStorageKey("auth0|user/one"), /auth0%7Cuser%2Fone/);
+  assert.deepEqual(readUserTasks("auth0|user/one", storage), [task]);
+  assert.deepEqual(readUserTasks("auth0|user/two", storage), []);
+  assert.equal(toggleUserTask([task], task.id)[0]?.status, "complete");
+  assert.equal(toggleUserTask(toggleUserTask([task], task.id), task.id)[0]?.status, "incomplete");
+  assert.deepEqual(deleteUserTask([task], task.id), []);
 });
 
 test("missing-fact ranking counts unresolved topics and ignores resolved topics", () => {

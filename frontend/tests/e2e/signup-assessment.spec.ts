@@ -118,5 +118,18 @@ test.describe("Auth0 signup and questionnaire to Gemini", () => {
       }
     }
     await expect(page.getByRole("heading", { name: "Personalized guidance" })).toBeVisible({ timeout: 90_000 });
+
+    await page.getByRole("checkbox", { name: /^Add .+ to My Tasks$/ }).first().check();
+    await page.getByRole("button", { name: "Create 1 task" }).click();
+    await expect(page.getByRole("status")).toContainText("1 task was added");
+    await page.getByRole("link", { name: "View tasks" }).click();
+    await expect(page).toHaveURL(/\/tasks$/);
+    const taskCard = page.locator("article").first();
+    await expect(taskCard).toBeVisible();
+    await taskCard.getByRole("button", { name: "Mark complete" }).click();
+    await taskCard.getByRole("button", { name: "Mark incomplete" }).click();
+    const deleteButton = taskCard.getByRole("button", { name: /^Delete .+ task$/ });
+    await deleteButton.click();
+    await expect(page.getByRole("heading", { name: "No tasks yet" })).toBeVisible();
   });
 });

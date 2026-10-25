@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { AlertCircle, CheckCircle2, HelpCircle, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import type { QuestionnaireAnswers } from "./types";
 import { mapToTaxFacts } from "@/lib/questionnaire/mapToTaxFacts";
 import { getRuleSetsForYear } from "@/lib/rules/data";
@@ -9,15 +9,10 @@ import { evaluateRuleSet } from "@/lib/rules/engine/evaluateTopic";
 import { summarizeCompleteness } from "@/lib/rules/engine/missingFacts";
 import { deterministicFollowUp, FOLLOW_UP_INPUTS, followUpAnswerLabel, getAdaptiveFollowUp, MAX_ADAPTIVE_QUESTIONS, parseFollowUpAnswer } from "@/lib/gemini/followUp";
 import type { ExplainAdvice, FollowUpQuestion } from "@/lib/gemini/types";
-import type { TaxFacts, TopicEvaluation } from "@/lib/rules/types";
+import type { TaxFacts } from "@/lib/rules/types";
+import TopicTaskList from "./TopicTaskList";
 
 interface ResultsPanelProps { answers: QuestionnaireAnswers }
-
-const STATUS_STYLES: Record<TopicEvaluation["status"], { icon: typeof CheckCircle2; label: string; className: string }> = {
-  may_apply: { icon: CheckCircle2, label: "May be worth investigating", className: "border-forest-300 bg-forest-50 text-forest-900" },
-  needs_info: { icon: HelpCircle, label: "Needs more information", className: "border-amber-300 bg-amber-50 text-amber-900" },
-  does_not_apply: { icon: AlertCircle, label: "Likely does not apply", className: "border-ink-200 bg-cream-100 text-ink-500" },
-};
 
 export default function ResultsPanel({ answers }: ResultsPanelProps) {
   const baseFacts = mapToTaxFacts(answers);
@@ -97,7 +92,7 @@ export default function ResultsPanel({ answers }: ResultsPanelProps) {
   return <div className="mt-6 space-y-6">
     <div className="rounded-xl border border-forest-200 bg-forest-50 px-4 py-4 text-sm text-forest-800"><strong>Illustrative preview, not a tax determination.</strong> These results come from Tax Help&apos;s deterministic rules engine running against the answers above. Nothing here is a confirmed credit, deduction, refund, or filing outcome.</div>
     <section><h3 className="text-sm font-semibold text-ink-900">Documents worth having on hand</h3>{documents.length === 0 ? <p className="mt-2 text-sm text-ink-600">Answer a few more questions to generate a document checklist.</p> : <ul className="mt-3 space-y-2">{documents.map((doc) => <li key={doc.id} className="rounded-lg border border-forest-100 bg-white px-3.5 py-2.5 text-sm text-ink-800"><span className="font-medium">{doc.label}</span>{doc.note && <span className="block text-xs text-ink-500">{doc.note}</span>}</li>)}</ul>}</section>
-    <section><h3 className="text-sm font-semibold text-ink-900">Topics evaluated ({completeness.resolvedTopics} of {evaluations.length} resolved)</h3><ul className="mt-3 space-y-2.5">{evaluations.map((evaluation) => { const style = STATUS_STYLES[evaluation.status]; const Icon = style.icon; return <li key={evaluation.topicId} className={`rounded-xl border px-4 py-3 text-sm ${style.className}`}><div className="flex items-center gap-2 font-medium"><Icon className="h-4 w-4 shrink-0" aria-hidden="true" />{evaluation.title}<span className="ml-auto text-xs font-normal opacity-80">{style.label}</span></div><p className="mt-1 text-xs leading-relaxed opacity-90">{evaluation.summary}</p>{evaluation.citations[0] && <a href={evaluation.citations[0].url} target="_blank" rel="noreferrer" className="mt-1.5 inline-block text-xs font-medium underline underline-offset-2">{evaluation.citations[0].label}</a>}</li>; })}</ul></section>
+    <TopicTaskList evaluations={evaluations} resolvedTopics={completeness.resolvedTopics} taxYear={2025} />
     <section className="rounded-xl border border-dashed border-forest-300 bg-white px-4 py-4">
       <h3 className="flex items-center gap-2 text-sm font-semibold text-ink-900"><Sparkles className="h-4 w-4 text-forest-700" aria-hidden="true" />{phase === "advice" ? "Personalized guidance" : "A few more details"}</h3>
       {(phase === "loading" || phase === "advice_loading") && <p className="mt-2 text-sm text-ink-500">{phase === "advice_loading" ? "Preparing your guidance…" : "Thinking of a follow-up…"}</p>}
