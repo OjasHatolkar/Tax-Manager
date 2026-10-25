@@ -36,7 +36,7 @@ export default function Benefits() {
             Clarity, not more confusion
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-ink-700">
-            Tax Help focuses on the handful of things that actually move you
+            Taxpertise focuses on the handful of things that actually move you
             forward: documents, possibilities worth checking, plain
             explanations, and a next step.
           </p>

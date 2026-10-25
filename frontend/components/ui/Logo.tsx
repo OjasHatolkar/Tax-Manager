@@ -6,7 +6,7 @@ interface LogoProps {
 }
 
 /**
- * Reusable Tax Help brand mark: a rounded forest-green badge with a leaf
+ * Reusable Taxpertise brand mark: a rounded forest-green badge with a leaf
  * (growth / clarity) paired with the wordmark. Keeping this as a single
  * component means the brand treatment stays consistent everywhere.
  */
@@ -18,7 +18,7 @@ export default function Logo({ className = "", iconOnly = false }: LogoProps) {
       </span>
       {!iconOnly && (
         <span className="text-[1.05rem] font-semibold tracking-tight text-ink-900">
-          Tax Help
+          Taxpertise
         </span>
       )}
     </span>

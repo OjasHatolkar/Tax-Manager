@@ -18,7 +18,7 @@ export default function ProductPreview() {
     <div
       className="relative mx-auto w-full max-w-md rounded-2xl border border-forest-100 bg-white p-5 shadow-cardHover sm:p-6"
       role="img"
-      aria-label="Illustrative preview of the Tax Help dashboard showing a sample document checklist, example tax topics to investigate, and a follow-up question. All content shown is illustrative only, not a real result."
+      aria-label="Illustrative preview of the Taxpertise dashboard showing a sample document checklist, example tax topics to investigate, and a follow-up question. All content shown is illustrative only, not a real result."
     >
       {/* Window chrome */}
       <div className="mb-5 flex items-center gap-1.5">

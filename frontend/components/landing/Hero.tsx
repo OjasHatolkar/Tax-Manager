@@ -24,7 +24,7 @@ export default function Hero() {
           </h1>
 
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink-700">
-            Tax Help asks a few plain questions about your work, school, and
+            Taxpertise asks a few plain questions about your work, school, and
             income, then helps you understand which tax benefits might be
             worth investigating, which documents to gather, and what to do
             next — explained in everyday language, not tax jargon.

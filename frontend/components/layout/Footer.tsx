@@ -71,7 +71,7 @@ export default function Footer() {
 
         <div className="mt-12 border-t border-forest-800 pt-8">
           <p className="text-xs leading-relaxed text-forest-300">
-            <strong className="text-forest-100">Disclaimer:</strong> Tax Help
+            <strong className="text-forest-100">Disclaimer:</strong> Taxpertise
             provides general educational guidance to help you understand
             possible tax considerations, documents, and next steps. It is not
             a substitute for individualized advice from a qualified tax
@@ -81,7 +81,7 @@ export default function Footer() {
             licensed tax professional before filing.
           </p>
           <p className="mt-4 text-xs text-forest-400">
-            © {new Date().getFullYear()} Tax Help. Built for a hackathon
+            © {new Date().getFullYear()} Taxpertise. Built for a hackathon
             project — not an official government service.
           </p>
         </div>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import HealthDashboard from "@/components/health/HealthDashboard";
 
 export const metadata: Metadata = {
-  title: "Service Health | Tax Help",
+  title: "Service Health | Taxpertise",
   robots: { index: false, follow: false },
 };
 

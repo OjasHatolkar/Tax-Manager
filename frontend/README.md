@@ -1,6 +1,6 @@
-# Tax Help
+# Taxpertise
 
-Tax Help is a Next.js app that collects a small set of tax facts, evaluates
+Taxpertise is a Next.js app that collects a small set of tax facts, evaluates
 versioned deterministic rules, and uses Gemini for bounded explanations and
 adaptive follow-up questions. It is an educational aid, not tax preparation or
 professional tax advice. The rule data currently supports the 2025 tax year.

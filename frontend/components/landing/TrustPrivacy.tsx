@@ -11,7 +11,7 @@ const commitments = [
     icon: MessagesSquare,
     title: "We ask when we're not sure",
     description:
-      "When important information is missing, Tax Help is designed to ask a follow-up question rather than assume an answer.",
+      "When important information is missing, Taxpertise is designed to ask a follow-up question rather than assume an answer.",
   },
   {
     icon: Scale,
@@ -37,7 +37,7 @@ export default function TrustPrivacy() {
               Trust &amp; privacy
             </h2>
             <p className="mt-4 text-base leading-relaxed text-ink-700">
-              Tax Help is an early, hackathon-stage project. Here&apos;s what we&apos;re
+              Taxpertise is an early, hackathon-stage project. Here&apos;s what we&apos;re
               designing toward — and an honest look at what&apos;s implemented
               today.
             </p>

@@ -4,7 +4,7 @@ import Footer from "@/components/layout/Footer";
 import Questionnaire from "@/components/questionnaire/Questionnaire";
 
 export const metadata: Metadata = {
-  title: "Your Assessment — Tax Help",
+  title: "Your Assessment — Taxpertise",
   description:
     "Answer a few plain-English questions about your work, school, income, and location to see which tax topics may be worth investigating.",
 };

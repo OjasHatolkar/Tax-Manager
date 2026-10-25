@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Tax Help — Understand your taxes, step by step",
+  title: "Taxpertise — Understand your taxes, step by step",
   description:
-    "Tax Help is an AI-assisted guide that helps you understand potentially relevant tax benefits, find the right documents, and figure out your next steps in plain English. Educational guidance, not tax filing or professional advice.",
+    "Taxpertise is an AI-assisted guide that helps you understand potentially relevant tax benefits, find the right documents, and figure out your next steps in plain English. Educational guidance, not tax filing or professional advice.",
   keywords: [
-    "tax help",
+    "Taxpertise",
     "tax guidance",
     "tax education",
     "W-2 taxes",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     icon: "/favicon.svg",
   },
   openGraph: {
-    title: "Tax Help — Understand your taxes, step by step",
+    title: "Taxpertise — Understand your taxes, step by step",
     description:
       "Plain-English guidance to help you find relevant tax benefits, documents, and next steps.",
     type: "website",

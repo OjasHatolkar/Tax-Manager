@@ -22,7 +22,7 @@ export default function Navbar() {
         aria-label="Primary"
         className="container-max flex h-16 items-center justify-between section-pad"
       >
-        <Link href="/" className="flex items-center" aria-label="Tax Help home">
+        <Link href="/" className="flex items-center" aria-label="Taxpertise home">
           <Logo />
         </Link>
 

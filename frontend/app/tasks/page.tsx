@@ -4,7 +4,7 @@ import Footer from "@/components/layout/Footer";
 import TaskDashboard from "@/components/tasks/TaskDashboard";
 
 export const metadata: Metadata = {
-  title: "My Tasks | Tax Help",
+  title: "My Tasks | Taxpertise",
   description: "Review and manage your saved tax topic tasks.",
   robots: { index: false, follow: false },
 };

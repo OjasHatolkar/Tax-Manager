@@ -43,7 +43,7 @@ export default function WhoItsFor() {
             Who it&apos;s for
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-ink-700">
-            Tax Help is built for people navigating their taxes without a
+            Taxpertise is built for people navigating their taxes without a
               dedicated accountant — wherever you&apos;re starting from.
           </p>
         </div>

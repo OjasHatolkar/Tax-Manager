@@ -36,7 +36,7 @@ export default function StateLocalStep({ answers, setAnswer }: StepProps) {
 
       <p className="mt-6 rounded-xl border border-forest-200 bg-forest-50 px-4 py-3 text-sm text-forest-800">
         Local tax rules vary by municipality and school district. We don&apos;t
-        assume a rate here — once this is fully built, Tax Help will point
+        assume a rate here — once this is fully built, Taxpertise will point
         you to the correct local tax collector for your specific location.
       </p>
     </div>

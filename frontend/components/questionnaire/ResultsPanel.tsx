@@ -90,7 +90,7 @@ export default function ResultsPanel({ answers }: ResultsPanelProps) {
   const selectClass = "mt-1 block w-full rounded-lg border border-ink-200 bg-white px-3 py-2";
 
   return <div className="mt-6 space-y-6">
-    <div className="rounded-xl border border-forest-200 bg-forest-50 px-4 py-4 text-sm text-forest-800"><strong>Illustrative preview, not a tax determination.</strong> These results come from Tax Help&apos;s deterministic rules engine running against the answers above. Nothing here is a confirmed credit, deduction, refund, or filing outcome.</div>
+    <div className="rounded-xl border border-forest-200 bg-forest-50 px-4 py-4 text-sm text-forest-800"><strong>Illustrative preview, not a tax determination.</strong> These results come from Taxpertise&apos;s deterministic rules engine running against the answers above. Nothing here is a confirmed credit, deduction, refund, or filing outcome.</div>
     <section><h3 className="text-sm font-semibold text-ink-900">Documents worth having on hand</h3>{documents.length === 0 ? <p className="mt-2 text-sm text-ink-600">Answer a few more questions to generate a document checklist.</p> : <ul className="mt-3 space-y-2">{documents.map((doc) => <li key={doc.id} className="rounded-lg border border-forest-100 bg-white px-3.5 py-2.5 text-sm text-ink-800"><span className="font-medium">{doc.label}</span>{doc.note && <span className="block text-xs text-ink-500">{doc.note}</span>}</li>)}</ul>}</section>
     <TopicTaskList evaluations={evaluations} resolvedTopics={completeness.resolvedTopics} taxYear={2025} />
     <section className="rounded-xl border border-dashed border-forest-300 bg-white px-4 py-4">
